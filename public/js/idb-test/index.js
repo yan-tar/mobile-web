@@ -1,6 +1,6 @@
 import idb from 'idb';
 
-var dbPromise = idb.open('test-db', 3, function(upgradeDb) {
+var dbPromise = idb.open('test-db', 4, function(upgradeDb) {
   switch(upgradeDb.oldVersion) {
     case 0:
       var keyValStore = upgradeDb.createObjectStore('keyval');
@@ -10,8 +10,11 @@ var dbPromise = idb.open('test-db', 3, function(upgradeDb) {
     case 2:
       var peopleStore = upgradeDb.transaction.objectStore('people');
       peopleStore.createIndex('animal', 'favoriteAnimal');
+    case 3: 
+    // create an index on 'people' named 'age', ordered by 'age'
+      peopleStore.createIndex('age', 'age');
   }
-  // TODO: create an index on 'people' named 'age', ordered by 'age'
+  
 });
 
 // read "hello" in "keyval"
@@ -36,10 +39,10 @@ dbPromise.then(function(db) {
 dbPromise.then(function(db) {
   var tx = db.transaction('keyval', 'readwrite');
   var keyValStore = tx.objectStore('keyval');
-  keyValStore.put('cat', 'favoriteAnimal');
+  keyValStore.put('unicorn', 'favoriteAnimal');
   return tx.complete;
 }).then(function() {
-  console.log('Added favoriteAnimal:cat to keyval');
+  console.log('Added unicorn as a my fav animal to keyval');
 });
 
 // add people to "people"
@@ -88,3 +91,12 @@ dbPromise.then(function(db) {
 });
 
 // TODO: console.log all people ordered by age
+dbPromise.then(function(db) {
+  var tx = db.transaction('people');
+  var peopleStore = tx.objectStore('people');
+  var ageIndex = peopleStore.index('age');
+
+  return ageIndex.getAll();
+}).then(function(people) {
+  console.log('People by age: ', people);
+});
